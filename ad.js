@@ -35,7 +35,7 @@ var isTape = function(t) { return t.hasOwnProperty('fanout') }
 //  unary: -, ++, --
 // binary: +, -, *, /, %, <, <=, >, >=, ==, !=, ===, !==
 
-// needswork: <_e ==> < here
+// needswork: <_e ==> < here (where < is overloaded appropriately)
 //            make sure it does the correct thing
 var lift_realreal_to_real = function(f, df_dx1, df_dx1, x1, x2) {
   var fn = function(x_1, x_2) {
