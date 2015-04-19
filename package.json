@@ -1,0 +1,26 @@
+{
+  "name": "ad.js",
+  "description": "Automatic Differentiation for Javascript",
+  "version": "0.0.1",
+  "author": "iffsid",
+  "main": "src/main.js",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/iffsid/ad.js"
+  },
+  "dependencies": {
+    "sweet.js": "^0.7.4"
+  },
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/iffsid/ad.js/issues"
+  },
+  "engines": {
+    "node": ">=0.10.0"
+  },
+  "keywords": [
+    "automatic",
+    "differentiation"
+  ],
+  "preferGlobal": true
+}
