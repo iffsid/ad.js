@@ -63,6 +63,7 @@ var overloader_2cmp = function(baseF) {
     }
   };
 };
+var zeroF = function(x){return 0;};
 var oneF = function(x1, x2){return 1.0;};
 var m_oneF = function(x1, x2){return -1.0;};
 var firstF = function(x1, x2){return x1;};
@@ -98,6 +99,10 @@ var l_exp = function(x) {
 
 var l_log = function(x) {
   return ad.lift_real_to_real(Math.log, function(x){return 1 / x}, x);
+};
+
+var l_floor = function(x) {
+  return ad.lift_real_to_real(Math.floor, zeroF, x);
 };
 
 var l_pow = function(x1, x2) {
