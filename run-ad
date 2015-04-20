@@ -1,0 +1,3 @@
+#!/bin/bash
+
+cat ./operators.sjs "$@" | ./node_modules/sweet.js/bin/sjs -r -s | node
