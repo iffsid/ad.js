@@ -229,10 +229,10 @@ var lt_e = function(e1, e2) { return e1 < e2 }
 
 var derivativeF = function(f) {
   return function(x) {
-    _e_++;
+    _e_ += 1;
     var y = f(makeDualNumber(_e_, x, 1.0));
-    var y_prime = (isDualNumber(y) || lt_e(y.epsilon, _e_)) ? 0.0 : y.perturbation;
-    _e_--;
+    var y_prime = (!isDualNumber(y) || lt_e(y.epsilon, _e_)) ? 0.0 : y.perturbation;
+    _e_ -= 1;
     return y_prime;
   }
 }
@@ -249,16 +249,15 @@ var gradientF = function(f) {
 }
 
 var determineFanout = function(tape) {
-  tape.fanout--;
+  tape.fanout += 1;
   if (tape.fanout == 1) { tape.tapes.forEach(determineFanout) }
 }
 
 var reversePhase = function(sensitivity, tape) {
-  tape.sensitivity += sensitivity;
-  tape.fanout--;
+  tape.sensitivity = l_add(tape.sensitivity, sensitivity);
+  tape.fanout -= 1;
   if (tape.fanout == 0) {
     var sens = tape.sensitivity;
-    // needswork: check that tape.factors and tape.tapes are equal length
     for (var i = 0; i < tape.factors.length; i++) {
       reversePhase(l_mul(sens, tape.factors[i]), tape.tapes[i]);
     }
@@ -267,14 +266,14 @@ var reversePhase = function(sensitivity, tape) {
 
 var gradientR = function(f) {
   return function(x) {
-    _e_++;
+    _e_ += 1;
     var new_x = x.map( function(xi) { return tape(_e_, xi, [], []) } )
     var y = f(new_x);
     if (isTape(y) && !lt_e(y.epsilon, _e_)) {
       determineFanout(y);
       reversePhase(1.0, y);
     }
-    _e_--;
+    _e_ -= 1;
     return new_x.map(function(v){return v.sensitivity})
   }
 }
