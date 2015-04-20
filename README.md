@@ -1,4 +1,4 @@
-## Automatic Differntiation in JavaScript
+## Automatic Differentiation in JavaScript
 
 A translation of the ad library from Jeff Siskind's Qobischeme.
 
