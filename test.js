@@ -1,5 +1,5 @@
-import macros from './macros'
-__initAD()
+import macros from 'ad/macros'
+__initAD;
 
 var f = function(x) {return x * x * x; };
 console.log("Testing y = x^3");

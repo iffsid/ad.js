@@ -18,14 +18,10 @@ operator !==  9 left { $l, $r } => #{ ad_pneq($l, $r) }
 // needswork: binary and bitwise operations
 
 macro __initAD {
-  case {_ $var} => {
-    var isInner = #{$var}[0].token.inner && #{$var}[0].token.inner[0];
-    var _innerVal = isInner ? isInner[0].token.value.concat('/functions') : './functions';
-    var innerVal = makeValue(_innerVal, #{here});
-    letstx $path = [innerVal];
+  case {_} => {
     return #{
       (function () {
-        var ad = require($path);
+        var ad = require('ad/functions');
         for (var prop in ad) {if (ad.hasOwnProperty(prop)) global[prop] = ad[prop];}
       })()
     }
