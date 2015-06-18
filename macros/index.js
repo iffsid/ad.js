@@ -21,7 +21,7 @@ macro __initAD {
   case {_} => {
     return #{
       (function () {
-        var ad = require('ad/functions');
+        var ad = require('./functions');
         for (var prop in ad) {if (ad.hasOwnProperty(prop)) global[prop] = ad[prop];}
       })()
     }

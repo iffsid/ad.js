@@ -1,4 +1,4 @@
-import macros from 'ad/macros'
+import macros from './macros'
 __initAD;
 
 var f = function(x) {return x * x * x; };
