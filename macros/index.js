@@ -18,6 +18,30 @@ operator !==  9 left { $l, $r } => #{ ad.pneq($l, $r) }
 // needswork: modulo operation
 // needswork: binary and bitwise operations
 
+// TODO? - the pre/post increment/decrement nuance only comes with assignment
+// also require wrapping up when isolated as statement (x++);
+macro ++ {
+  rule { $r } => { $r = $r + 1 }
+  rule infix { $l | } => { $l = $l + 1 }
+}
+macro -- {
+  rule { $r } => { $r = $r - 1 }
+  rule infix { $l | } => { $l = $l - 1 }
+}
+
+macro += {
+  rule infix { $var:expr | $exprVal:expr } => { $var = $var + $exprVal }
+}
+macro -= {
+  rule infix { $var:expr | $exprVal:expr } => { $var = $var - $exprVal }
+}
+macro /= {
+  rule infix { $var:expr | $exprVal:expr } => { $var = $var / $exprVal }
+}
+macro *= {
+  rule infix { $var:expr | $exprVal:expr } => { $var = $var * $exprVal }
+}
+
 macro Math {
   rule { .$x } => { ad.maths.$x }
 }
@@ -34,4 +58,10 @@ export ==
 export !=
 export ===
 export !==
+export ++
+export --
+export +=
+export -=
+export /=
+export *=
 export Math
