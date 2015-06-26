@@ -2,32 +2,32 @@
 
 /**
    Todo:
-   - enforce strictness on the primitive functions so that errors are
-     thrown when arguments are mismatched types
-   - max and min as ckhs smoothed versions
+   - CHKS max and min
+   - performance testing
  **/
-
-// http://stackoverflow.com/questions/502366/structs-in-javascript
-function makeStruct() {
-  var args = arguments;
-  function constructor() {
-    for (var i = 0; i < args.length; i++)
-      this[args[i]] = arguments[i];
-  }
-  return constructor;
-}
 
 var _e_ = 0
 
 var lt_e = function(e1, e2) { return e1 < e2 }
 
-var S_dualNumber = makeStruct('epsilon', 'primal', 'perturbation');
-var S_tape = makeStruct('epsilon', 'primal', 'factors', 'tapes', 'fanout', 'sensitivity');
+var S_dualNumber = function(epsilon, primal, perturbation) {
+  this.epsilon = epsilon;
+  this.primal = primal;
+  this.perturbation = perturbation;
+}
+var S_tape = function(epsilon, primal, factors, tapes, fanout, sensitivity) {
+  this.epsilon = epsilon;
+  this.primal = primal;
+  this.factors = factors;
+  this.tapes = tapes;
+  this.fanout = fanout;
+  this.sensitivity = sensitivity;
+}
 
 var makeDualNumber = function(epsilon, primal, perturbation) {
   return new S_dualNumber(epsilon, primal, perturbation);
 };
-var isDualNumber = function(dn) { return dn.hasOwnProperty('perturbation'); };
+var isDualNumber = function(dn) { return dn instanceof S_dualNumber; };
 
 var makeTape = function(epsilon, primal, factors, tapes, fanout, sensitivity) {
   return new S_tape(epsilon, primal, factors, tapes, fanout, sensitivity);
@@ -35,7 +35,7 @@ var makeTape = function(epsilon, primal, factors, tapes, fanout, sensitivity) {
 var tape = function(e, primal, factors, tapes) {
   return makeTape(e, primal, factors, tapes, 0, 0.0);
 };
-var isTape = function(t) { return t.hasOwnProperty('fanout'); };
+var isTape = function(t) { return t instanceof S_tape; };
 
 var tapify = function(p) {return tape(_e_, p, [], [])}
 
@@ -169,20 +169,19 @@ var overloader_2op = function(baseF, lifter1, lifter2) {
 };
 // this might need primal* if cmp operators are used with &rest
 var overloader_2cmp = function(baseF) {
-  return function(x1, x2) {
-    if (isNumeric(x1) && isNumeric(x2))
+  var fn = function(x1, x2) {
+    if (isDualNumber(x1) || isTape(x1))
+      return fn(x1.primal, x2);
+    else if (isDualNumber(x2) || isTape(x2))
+      return fn(x1, x2.primal);
+    else
       return baseF(x1, x2);
-    else {
-      var fn = function(x1, x2) {
-        if (isDualNumber(x1) || isTape(x1))
-          return fn(x1.primal, x2);
-        else if (isDualNumber(x2) || isTape(x2))
-          return fn(x1, x2.primal);
-        else
-          return baseF(x1, x2);
-      }
+  }
+  return function(x1, x2) {
+    if ((isNumeric(x1) && isNumeric(x2)))
+      return baseF(x1, x2);
+    else
       return fn(x1, x2);
-    }
   };
 };
 var zeroF = function(x){return 0;};
@@ -288,27 +287,28 @@ var gradientF = function(f) {
 
 var determineFanout = function(tape) {
   tape.fanout += 1;
-  if (tape.fanout == 1) { tape.tapes.forEach(determineFanout) }
+  if (tape.fanout === 1) {
+    var n = tape.tapes.length;
+    while (n--) determineFanout(tape.tapes[n]);
+  }
 }
 
 var initializeSensitivity = function(tape) {
   tape.sensitivity = 0;
   tape.fanout -= 1;
-  if (tape.fanout == 0) {
-    for (var i = 0; i < tape.tapes.length; i++) {
-      initializeSensitivity(tape.tapes[i]);
-    }
+  if (tape.fanout === 0) {
+    var n = tape.tapes.length;
+    while (n--) initializeSensitivity(tape.tapes[n]);
   }
 }
 
 var reversePhase = function(sensitivity, tape) {
   tape.sensitivity = d_add(tape.sensitivity, sensitivity);
   tape.fanout -= 1;
-  if (tape.fanout == 0) {
+  if (tape.fanout === 0) {
     var sens = tape.sensitivity;
-    for (var i = 0; i < tape.factors.length; i++) {
-      reversePhase(d_mul(sens, tape.factors[i]), tape.tapes[i]);
-    }
+    var n = tape.factors.length;
+    while (n--) reversePhase(d_mul(sens, tape.factors[n]), tape.tapes[n]);
   }
 }
 
