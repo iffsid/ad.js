@@ -1,6 +1,6 @@
 {
-  "name": "ad",
-  "version": "0.0.1",
+  "name": "ad.js",
+  "version": "0.1.0",
   "description": "Automatic Differentiation for Javascript",
   "main": "functions/index.js",
   "author": "iffsid",
@@ -21,10 +21,7 @@
     "node": ">=0.10.0"
   },
   "keywords": [
-    "automatic",
-    "differentiation",
-    "overload",
-    "operators"
-  ],
-  "preferGlobal": true
+    "automatic differentiation",
+    "overloaded operators"
+  ]
 }
