@@ -1,6 +1,6 @@
 {
   "name": "ad.js",
-  "version": "0.1.0",
+  "version": "0.2.0",
   "description": "Automatic Differentiation for Javascript",
   "main": "functions/index.js",
   "author": "iffsid",
@@ -12,8 +12,7 @@
     "type": "git",
     "url": "https://github.com/iffsid/ad.js"
   },
-  "dependencies": {
-  },
+  "dependencies": {},
   "bugs": {
     "url": "https://github.com/iffsid/ad.js/issues"
   },
