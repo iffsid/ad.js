@@ -1,5 +1,12 @@
 "use strict";
 
+/**
+   Todo:
+   - enforce strictness on the primitive functions so that errors are
+     thrown when arguments are mismatched types
+   - max and min as ckhs smoothed versions
+ **/
+
 // http://stackoverflow.com/questions/502366/structs-in-javascript
 function makeStruct() {
   var args = arguments;
@@ -9,6 +16,10 @@ function makeStruct() {
   }
   return constructor;
 }
+
+var _e_ = 0
+
+var lt_e = function(e1, e2) { return e1 < e2 }
 
 var S_dualNumber = makeStruct('epsilon', 'primal', 'perturbation');
 var S_tape = makeStruct('epsilon', 'primal', 'factors', 'tapes', 'fanout', 'sensitivity');
@@ -26,7 +37,38 @@ var tape = function(e, primal, factors, tapes) {
 };
 var isTape = function(t) { return t.hasOwnProperty('fanout'); };
 
-// needswork: check if all operators used here are primitive or lifted
+var tapify = function(p) {return tape(_e_, p, [], [])}
+
+var untapify = function(x) {
+  if (isTape(x)) {
+    return untapify(x.primal);
+  } else if (Array.isArray(x)) {
+    return x.map(untapify);
+  } else {
+    return x;
+  }
+}
+
+var makeTapifier = function() {
+  _e_ += 1;
+  return (function() {
+    var eThis = _e_;
+    return function(p) {return tape(eThis, p, [], []);};
+  }())
+}
+
+var lift_real_to_real = function(f, df_dx, x) {
+  var fn = function(x1) {
+    if (isDualNumber(x1))
+      return makeDualNumber(x1.epsilon, fn(x1.primal), d_mul(df_dx(x1.primal), x1.perturbation));
+    else if (isTape(x1))
+      return tape(x1.epsilon, fn(x1.primal), [df_dx(x1.primal)], [x1]);
+    else
+      return f(x1);
+  }
+  return fn(x);
+};
+
 var lift_realreal_to_real = function(f, df_dx1, df_dx2, x1, x2) {
   var fn = function(x_1, x_2) {
     if (isDualNumber(x_1)) {
@@ -87,18 +129,6 @@ var lift_realreal_to_real = function(f, df_dx1, df_dx2, x1, x2) {
     }
   };
   return fn(x1, x2);
-};
-
-var lift_real_to_real = function(f, df_dx, x) {
-  var fn = function(x1) {
-    if (isDualNumber(x1))
-      return makeDualNumber(x1.epsilon, fn(x1.primal), d_mul(df_dx(x1.primal), x1.perturbation));
-    else if (isTape(x1))
-      return tape(x1.epsilon, fn(x1.primal), [df_dx(x1.primal)], [x1]);
-    else
-      return f(x1);
-  }
-  return fn(x);
 };
 
 /** Lifting operations **/
@@ -176,7 +206,7 @@ var d_neq = overloader_2cmp(f_neq);
 var d_peq = overloader_2cmp(f_peq);
 var d_pneq = overloader_2cmp(f_pneq);
 var d_gt = overloader_2cmp(f_gt);
-var d_lq = overloader_2cmp(f_lt);
+var d_lt = overloader_2cmp(f_lt);
 var d_geq = overloader_2cmp(f_geq);
 var d_leq = overloader_2cmp(f_leq);
 
@@ -221,11 +251,19 @@ var d_atan = function(x1, x2) {
                                x2);
 };
 
+var d_Math = {};
+Object.getOwnPropertyNames(Math).forEach(function(n) {d_Math[n] = Math[n]});
+d_Math.floor = d_floor;
+d_Math.sqrt = d_sqrt;
+d_Math.exp = d_exp;
+d_Math.log = d_log;
+d_Math.pow = d_pow;
+d_Math.sin = d_sin;
+d_Math.cos = d_cos;
+d_Math.atan = d_atan;
+d_Math.atan2 = d_atan;
 
 /** derivatives and gradients **/
-var _e_ = 0
-
-var lt_e = function(e1, e2) { return e1 < e2 }
 
 var derivativeF = function(f) {
   return function(x) {
@@ -251,6 +289,16 @@ var gradientF = function(f) {
 var determineFanout = function(tape) {
   tape.fanout += 1;
   if (tape.fanout == 1) { tape.tapes.forEach(determineFanout) }
+}
+
+var initializeSensitivity = function(tape) {
+  tape.sensitivity = 0;
+  tape.fanout -= 1;
+  if (tape.fanout == 0) {
+    for (var i = 0; i < tape.tapes.length; i++) {
+      initializeSensitivity(tape.tapes[i]);
+    }
+  }
 }
 
 var reversePhase = function(sensitivity, tape) {
@@ -285,28 +333,59 @@ var derivativeR = function(f) {
   }
 }
 
+var xyGradientR = function(mapIndependent, xReverse, yReverse) {
+  var mapDependent = function(f, yReverse) {return f(yReverse);};
+  var forEachDependent1 = function(f, yReverse) {return f(yReverse);};
+  var forEachDependent2 = function(f, yReverse, ySensitivity) {
+    return f(yReverse, ySensitivity);
+  };
+  // propogate sensitivities from y backwards
+  var ySensitivities = [1];
+  var thisE = tapify(0.0).epsilon;
+  var xSensitivities = _.map(ySensitivities, function(ySensitivity) {
+    forEachDependent1(function(yReverse) {
+      if (isTape(yReverse) && !lt_e(yReverse.epsilon, thisE)) {
+        determineFanout(yReverse);
+        initializeSensitivity(yReverse);
+      }
+    }, yReverse);
+    forEachDependent2(function(yReverse, ySensitivity) {
+      if (isTape(yReverse) && !lt_e(yReverse.epsilon, thisE)) {
+        determineFanout(yReverse);
+        reversePhase(ySensitivity, yReverse);
+      }
+    }, yReverse, ySensitivity);
+    return mapIndependent(function(tape) {return tape.sensitivity}, xReverse);
+  }, ySensitivities);
+  // return untapified y and the x derivatives
+  return [mapDependent(function(yReverse) {
+    return !isTape(yReverse) || lt_e(yReverse.epsilon, thisE) ?
+      yReverse :
+      yReverse.primal;
+  }, yReverse),
+          xSensitivities];
+}
+
 module.exports = {
-  ad_add: d_add,
-  ad_sub: d_sub,
-  ad_mul: d_mul,
-  ad_div: d_div,
-  ad_eq: d_eq,
-  ad_neq: d_neq,
-  ad_peq: d_peq,
-  ad_pneq: d_pneq,
-  ad_gt: d_gt,
-  ad_lq: d_lq,
-  ad_geq: d_geq,
-  ad_leq: d_leq,
-  ad_sqrt: d_sqrt,
-  ad_exp: d_exp,
-  ad_log: d_log,
-  ad_pow: d_pow,
-  ad_sin: d_sin,
-  ad_cos: d_cos,
-  ad_atan: d_atan,
-  ad_derivativeF: derivativeF,
-  ad_gradientF: gradientF,
-  ad_derivativeR: derivativeR,
-  ad_gradientR: gradientR
+  add: d_add,
+  sub: d_sub,
+  mul: d_mul,
+  div: d_div,
+  eq: d_eq,
+  neq: d_neq,
+  peq: d_peq,
+  pneq: d_pneq,
+  gt: d_gt,
+  lt: d_lt,
+  geq: d_geq,
+  leq: d_leq,
+  maths: d_Math,
+  derivativeF: derivativeF,
+  gradientF: gradientF,
+  derivativeR: derivativeR,
+  gradientR: gradientR,
+  xyGradientR: xyGradientR,
+  makeTapifier: makeTapifier,
+  tapify: tapify,
+  untapify: untapify
 }
