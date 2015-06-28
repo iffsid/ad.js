@@ -57,7 +57,7 @@ var makeTapifier = function() {
   }())
 }
 
-var lift_real_to_real = function(f, df_dx, x) {
+var lift_real_to_real = function(f, df_dx) {
   var fn = function(x1) {
     if (isDualNumber(x1))
       return makeDualNumber(x1.epsilon, fn(x1.primal), d_mul(df_dx(x1.primal), x1.perturbation));
@@ -66,10 +66,10 @@ var lift_real_to_real = function(f, df_dx, x) {
     else
       return f(x1);
   }
-  return fn(x);
+  return fn;
 };
 
-var lift_realreal_to_real = function(f, df_dx1, df_dx2, x1, x2) {
+var lift_realreal_to_real = function(f, df_dx1, df_dx2) {
   var fn = function(x_1, x_2) {
     if (isDualNumber(x_1)) {
       if (isDualNumber(x_2))
@@ -128,7 +128,7 @@ var lift_realreal_to_real = function(f, df_dx1, df_dx2, x1, x2) {
         return f(x_1, x_2)
     }
   };
-  return fn(x1, x2);
+  return fn;
 };
 
 /** Lifting operations **/
@@ -193,45 +193,21 @@ var d_lt = overloader_2cmp(f_lt);
 var d_geq = overloader_2cmp(f_geq);
 var d_leq = overloader_2cmp(f_leq);
 
-var d_sqrt = function(x) {
-  return lift_real_to_real(Math.sqrt, function(x){return d_div(1, d_mul(2.0, d_sqrt(x)))}, x)
-};
-
-var d_exp = function(x) {
-  return lift_real_to_real(Math.exp, function(x){return d_exp(x)}, x);
-};
-
-var d_log = function(x) {
-  return lift_real_to_real(Math.log, function(x){return d_div(1,x)}, x);
-};
-
-var d_floor = function(x) {
-  return lift_real_to_real(Math.floor, zeroF, x);
-};
-
-var d_pow = function(x1, x2) {
-  return lift_realreal_to_real(Math.pow,
-                               function(x1, x2){return d_mul(x2, d_pow(x1, d_sub(x2, 1)));},
-                               function(x1, x2){return d_mul(d_log(x1), d_pow(x1, x2));},
-                               x1,
-                               x2);
-};
-
-var d_sin = function(x) {
-  return lift_real_to_real(Math.sin, function(x){return d_cos(x)}, x);
-};
-
-var d_cos = function(x) {
-  return lift_real_to_real(Math.cos, function(x){return d_sub(0, d_sin(x))}, x);
-};
-
+var d_sqrt = lift_real_to_real(Math.sqrt, function(x){return d_div(1, d_mul(2.0, d_sqrt(x)))})
+var d_exp = lift_real_to_real(Math.exp, function(x){return d_exp(x)});
+var d_log = lift_real_to_real(Math.log, function(x){return d_div(1,x)});
+var d_floor = lift_real_to_real(Math.floor, zeroF);
+var d_pow = lift_realreal_to_real(Math.pow,
+                                  function(x1, x2){return d_mul(x2, d_pow(x1, d_sub(x2, 1)));},
+                                  function(x1, x2){return d_mul(d_log(x1), d_pow(x1, x2));});
+var d_sin = lift_real_to_real(Math.sin, function(x){return d_cos(x)});
+var d_cos = lift_real_to_real(Math.cos, function(x){return d_sub(0, d_sin(x))});
+var d_atanF = lift_realreal_to_real(Math.atan2,
+                                    function(x1, x2){return d_div(x2, d_add(d_mul(x1,x1), d_mul(x2,x2)));},
+                                    function(x1, x2){return d_div(d_sub(0,x1), d_add(d_mul(x1,x1), d_mul(x2,x2)));});
 var d_atan = function(x1, x2) {
   x2 = x2 === undefined ? 1 : x2; // just atan, not atan2
-  return lift_realreal_to_real(Math.atan2,
-                               function(x1, x2){return d_div(x2, d_add(d_mul(x1,x1), d_mul(x2,x2)));},
-                               function(x1, x2){return d_div(d_sub(0,x1), d_add(d_mul(x1,x1), d_mul(x2,x2)));},
-                               x1,
-                               x2);
+  return d_atanF(x1, x2);
 };
 
 var d_Math = {};
