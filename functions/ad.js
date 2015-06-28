@@ -132,9 +132,6 @@ var lift_realreal_to_real = function(f, df_dx1, df_dx2, x1, x2) {
 };
 
 /** Lifting operations **/
-function isNumeric(n) {
-  return !isNaN(parseFloat(n)) && isFinite(n);
-}
 
 /** functional wrappers for primitive operators **/
 var f_minus = function(a) {return -a};
@@ -159,14 +156,6 @@ var f_geq = function(a,b) {return a>=b};
 var f_leq = function(a,b) {return a<=b};
 
 /** helpers **/
-var overloader_2op = function(baseF, lifter1, lifter2) {
-  return function(x1, x2) {
-    if (isNumeric(x1) && isNumeric(x2))
-      return baseF(x1, x2);
-    else
-      return lift_realreal_to_real(baseF, lifter1, lifter2, x1, x2);
-  }
-};
 // this might need primal* if cmp operators are used with &rest
 var overloader_2cmp = function(baseF) {
   var fn = function(x1, x2) {
@@ -177,12 +166,7 @@ var overloader_2cmp = function(baseF) {
     else
       return baseF(x1, x2);
   }
-  return function(x1, x2) {
-    if ((isNumeric(x1) && isNumeric(x2)))
-      return baseF(x1, x2);
-    else
-      return fn(x1, x2);
-  };
+  return fn;
 };
 var zeroF = function(x){return 0;};
 var oneF = function(x1, x2){return 1.0;};
@@ -193,10 +177,10 @@ var div2F = function(x1, x2){return d_div(1,x2);};
 var divNF = function(x1, x2){return d_div(d_sub(0,x1), d_mul(x2, x2));};
 
 /** lifted functions (overloaded) **/
-var d_add = overloader_2op(f_add, oneF, oneF);
-var d_sub = overloader_2op(f_sub, oneF, m_oneF);
-var d_mul = overloader_2op(f_mul, secondF, firstF);
-var d_div = overloader_2op(f_div, div2F, divNF);
+var d_add = lift_realreal_to_real(f_add, oneF, oneF);
+var d_sub = lift_realreal_to_real(f_sub, oneF, m_oneF);
+var d_mul = lift_realreal_to_real(f_mul, secondF, firstF);
+var d_div = lift_realreal_to_real(f_div, div2F, divNF);
 // needswork: d_mod should be derived through `d_div` and `d_sub`
 // needswork: logical and bitwise operations
 
