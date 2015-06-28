@@ -6,6 +6,8 @@
    - performance testing
  **/
 
+var primops = require('./primops')
+
 var _e_ = 0
 
 var lt_e = function(e1, e2) { return e1 < e2 }
@@ -133,28 +135,6 @@ var lift_realreal_to_real = function(f, df_dx1, df_dx2) {
 
 /** Lifting operations **/
 
-/** functional wrappers for primitive operators **/
-var f_minus = function(a) {return -a};
-
-var f_add = function(a,b) {return a+b};
-var f_sub = function(a,b) {return a-b};
-var f_mul = function(a,b) {return a*b};
-var f_div = function(a,b) {return a/b};
-var f_mod = function(a,b) {return a%b};
-
-var f_and = function(a,b) {return a && b};
-var f_or = function(a,b) {return a || b};
-var f_not = function(a) {return !a};
-
-var f_eq = function(a,b) {return a==b};
-var f_neq = function(a,b) {return a!=b};
-var f_peq = function(a,b) {return a===b};
-var f_pneq = function(a,b) {return a!==b};
-var f_gt = function(a,b) {return a>b};
-var f_lt = function(a,b) {return a<b};
-var f_geq = function(a,b) {return a>=b};
-var f_leq = function(a,b) {return a<=b};
-
 /** helpers **/
 // this might need primal* if cmp operators are used with &rest
 var overloader_2cmp = function(baseF) {
@@ -168,35 +148,30 @@ var overloader_2cmp = function(baseF) {
   }
   return fn;
 };
-var zeroF = function(x){return 0;};
-var oneF = function(x1, x2){return 1.0;};
-var m_oneF = function(x1, x2){return -1.0;};
-var firstF = function(x1, x2){return x1;};
-var secondF = function(x1, x2){return x2;};
 var div2F = function(x1, x2){return d_div(1,x2);};
 var divNF = function(x1, x2){return d_div(d_sub(0,x1), d_mul(x2, x2));};
 
 /** lifted functions (overloaded) **/
-var d_add = lift_realreal_to_real(f_add, oneF, oneF);
-var d_sub = lift_realreal_to_real(f_sub, oneF, m_oneF);
-var d_mul = lift_realreal_to_real(f_mul, secondF, firstF);
-var d_div = lift_realreal_to_real(f_div, div2F, divNF);
+var d_add = lift_realreal_to_real(primops.add, primops.oneF, primops.oneF);
+var d_sub = lift_realreal_to_real(primops.sub, primops.oneF, primops.m_oneF);
+var d_mul = lift_realreal_to_real(primops.mul, primops.secondF, primops.firstF);
+var d_div = lift_realreal_to_real(primops.div, div2F, divNF);
 // needswork: d_mod should be derived through `d_div` and `d_sub`
 // needswork: logical and bitwise operations
 
-var d_eq = overloader_2cmp(f_eq);
-var d_neq = overloader_2cmp(f_neq);
-var d_peq = overloader_2cmp(f_peq);
-var d_pneq = overloader_2cmp(f_pneq);
-var d_gt = overloader_2cmp(f_gt);
-var d_lt = overloader_2cmp(f_lt);
-var d_geq = overloader_2cmp(f_geq);
-var d_leq = overloader_2cmp(f_leq);
+var d_eq = overloader_2cmp(primops.eq);
+var d_neq = overloader_2cmp(primops.neq);
+var d_peq = overloader_2cmp(primops.peq);
+var d_pneq = overloader_2cmp(primops.pneq);
+var d_gt = overloader_2cmp(primops.gt);
+var d_lt = overloader_2cmp(primops.lt);
+var d_geq = overloader_2cmp(primops.geq);
+var d_leq = overloader_2cmp(primops.leq);
 
 var d_sqrt = lift_real_to_real(Math.sqrt, function(x){return d_div(1, d_mul(2.0, d_sqrt(x)))})
 var d_exp = lift_real_to_real(Math.exp, function(x){return d_exp(x)});
 var d_log = lift_real_to_real(Math.log, function(x){return d_div(1,x)});
-var d_floor = lift_real_to_real(Math.floor, zeroF);
+var d_floor = lift_real_to_real(Math.floor, primops.zeroF);
 var d_pow = lift_realreal_to_real(Math.pow,
                                   function(x1, x2){return d_mul(x2, d_pow(x1, d_sub(x2, 1)));},
                                   function(x1, x2){return d_mul(d_log(x1), d_pow(x1, x2));});
