@@ -39,3 +39,35 @@ To run only `reverse mode` with only first-derivatives (faster even)
 ``` javascript
 var ad = require('ad.js')({mode: 'r', noHigher: true})
 ```
+
+### Test
+
+Uses nodeunit. To run tests, do `npm test`
+
+### Example
+The setup takes a file that looks like so:
+
+``` javascript
+var cube = function(x) {
+  return x * x * x;
+}
+```
+
+and transforms it into code that looks like so:
+
+``` javascript
+var cube = function(x) {
+  return ad.mul(x, ad.mul(x, x));
+}
+```
+
+after which one can do things like:
+
+``` javascript
+var dCube_dx = ad.derivativeF(cube);
+console.log(dCube_dx(10))
+// will print 300 => d/dx(x^3) = 3x^2 @x=10 = 300
+```
+
+The bulk of the instructions above are just the means by which sweet gets its
+hands on the code you want to transform and the macros to transform it with.
