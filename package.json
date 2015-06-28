@@ -8,7 +8,9 @@
   "directories": {
     "test": "tests"
   },
-  "dependencies": {},
+  "dependencies": {
+    "sweet.js": "^0.7.4"
+  },
   "devDependencies": {
     "nodeunit": "^0.9.1"
   },
