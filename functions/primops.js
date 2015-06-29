@@ -7,10 +7,6 @@ var mul   = function(a,b) {return a*b};
 var div   = function(a,b) {return a/b};
 var mod   = function(a,b) {return a%b};
 
-var and   = function(a,b) {return a && b};
-var or    = function(a,b) {return a || b};
-var not   = function(a) {return !a};
-
 var eq    = function(a,b) {return a==b};
 var neq   = function(a,b) {return a!=b};
 var peq   = function(a,b) {return a===b};
@@ -35,9 +31,6 @@ module.exports = {
   mul: mul,
   div: div,
   mod: mod,
-  and: and,
-  or: or,
-  not: not,
   eq:   eq,
   neq:  neq,
   peq:  peq,

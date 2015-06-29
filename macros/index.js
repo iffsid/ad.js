@@ -16,15 +16,9 @@ operator ==   9 left { $l, $r } => #{ ad.eq($l, $r) }
 operator !=   9 left { $l, $r } => #{ ad.neq($l, $r) }
 operator ===  9 left { $l, $r } => #{ ad.peq($l, $r) }
 operator !==  9 left { $l, $r } => #{ ad.pneq($l, $r) }
-operator &    8 left { $l, $r } => #{ ad.band($l, $r) }
-operator ^    7 left { $l, $r } => #{ ad.bxor($l, $r) }
-operator |    6 left { $l, $r } => #{ ad.bor($l, $r) }
-operator &&   5 left { $l, $r } => #{ ad.and($l, $r) }
-operator ||   4 left { $l, $r } => #{ ad.or($l, $r) }
-// TODO: bitshift operators
 
 // TODO? - the pre/post increment/decrement nuance only comes with assignment
-// also require wrapping up when isolated as statement (x++);
+//       - requires wrapping up when isolated as statement (x++);
 macro ++ {
   rule { $r } => { $r = $r + 1 }
   rule infix { $l | } => { $l = $l + 1 }
@@ -70,8 +64,3 @@ export -=
 export /=
 export *=
 export Math
-export &
-export ^
-export |
-export &&
-export ||
