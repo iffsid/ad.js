@@ -156,8 +156,16 @@ var d_add = lift_realreal_to_real(primops.add, primops.oneF, primops.oneF);
 var d_sub = lift_realreal_to_real(primops.sub, primops.oneF, primops.m_oneF);
 var d_mul = lift_realreal_to_real(primops.mul, primops.secondF, primops.firstF);
 var d_div = lift_realreal_to_real(primops.div, div2F, divNF);
-// needswork: d_mod should be derived through `d_div` and `d_sub`
-// needswork: logical and bitwise operations
+var d_mod = function(a, b) {return d_sub(a, d_mul(a, d_floor(d_div(a, b))));};
+
+// logical and bitwise operations just get untapified because
+// one cannot ask for derivatives of booleans and bitstrings
+var d_band = function(x, y) {return primops.band(untapify(x), untapify(y))}
+var d_bxor = function(x, y) {return primops.bxor(untapify(x), untapify(y))}
+var d_bor = function(x, y) {return primops.bor(untapify(x), untapify(y))}
+var d_and = function(x, y) {return primops.and(untapify(x), untapify(y))}
+var d_or = function(x, y) {return primops.or(untapify(x), untapify(y))}
+var d_not = function(x) {return primops.not(untapify(x))}
 
 var d_eq = overloader_2cmp(primops.eq);
 var d_neq = overloader_2cmp(primops.neq);
@@ -306,6 +314,7 @@ module.exports = {
   sub: d_sub,
   mul: d_mul,
   div: d_div,
+  mod: d_mod,
   eq: d_eq,
   neq: d_neq,
   peq: d_peq,
@@ -314,6 +323,12 @@ module.exports = {
   lt: d_lt,
   geq: d_geq,
   leq: d_leq,
+  band: d_band,
+  bxor: d_bxor,
+  bor: d_bor,
+  and: d_and,
+  or: d_or,
+  not: d_not,
   maths: d_Math,
   derivativeF: derivativeF,
   gradientF: gradientF,
