@@ -39,7 +39,15 @@ var tape = function(e, primal, factors, tapes) {
 };
 var isTape = function(t) { return t instanceof S_tape; };
 
-var tapify = function(p) {return tape(_e_, p, [], [])}
+var makeTapifier = function() {
+  _e_ += 1;
+  return (function() {
+    var eThis = _e_;
+    return function(p) {return tape(eThis, p, [], []);};
+  }())
+}
+
+var tapify = makeTapifier();
 
 var untapify = function(x) {
   if (isTape(x)) {
@@ -49,14 +57,6 @@ var untapify = function(x) {
   } else {
     return x;
   }
-}
-
-var makeTapifier = function() {
-  _e_ += 1;
-  return (function() {
-    var eThis = _e_;
-    return function(p) {return tape(eThis, p, [], []);};
-  }())
 }
 
 var lift_real_to_real = function(f, df_dx) {
@@ -228,7 +228,7 @@ var determineFanout = function(tape) {
 }
 
 var initializeSensitivity = function(tape) {
-  tape.sensitivity = 0;
+  tape.sensitivity = 0.0;
   tape.fanout -= 1;
   if (tape.fanout === 0) {
     var n = tape.tapes.length;
@@ -267,6 +267,20 @@ var derivativeR = function(f) {
   }
 }
 
+var yGradientR = function(yReverse) {
+  // propogate sensitivities from y backwards
+  var ySensitivity = 1.0;
+  var thisE = tapify(0.0).epsilon;
+  if (isTape(yReverse) && !lt_e(yReverse.epsilon, thisE)) {
+    determineFanout(yReverse);
+    initializeSensitivity(yReverse);
+  }
+  if (isTape(yReverse) && !lt_e(yReverse.epsilon, thisE)) {
+    determineFanout(yReverse);
+    reversePhase(ySensitivity, yReverse);
+  }
+}
+
 var xyGradientR = function(mapIndependent, xReverse, yReverse) {
   var mapDependent = function(f, yReverse) {return f(yReverse);};
   var forEachDependent1 = function(f, yReverse) {return f(yReverse);};
@@ -274,7 +288,7 @@ var xyGradientR = function(mapIndependent, xReverse, yReverse) {
     return f(yReverse, ySensitivity);
   };
   // propogate sensitivities from y backwards
-  var ySensitivities = [1];
+  var ySensitivities = [1.0];
   var thisE = tapify(0.0).epsilon;
   var xSensitivities = _.map(ySensitivities, function(ySensitivity) {
     forEachDependent1(function(yReverse) {
@@ -319,6 +333,7 @@ module.exports = {
   gradientF: gradientF,
   derivativeR: derivativeR,
   gradientR: gradientR,
+  yGradientR: yGradientR,
   xyGradientR: xyGradientR,
   makeTapifier: makeTapifier,
   tapify: tapify,
