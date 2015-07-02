@@ -1,5 +1,4 @@
 /** functional wrappers for primitive operators **/
-var minus = function(a) {return -a};
 
 var add   = function(a,b) {return a+b};
 var sub   = function(a,b) {return a-b};
@@ -25,7 +24,6 @@ var firstF  = function(x1, x2){return x1;};
 var secondF = function(x1, x2){return x2;};
 
 module.exports = {
-  minus: minus,
   add: add,
   sub: sub,
   mul: mul,
