@@ -2,6 +2,7 @@
 
 /**
    Todo:
+   - hyperbolic and inv hyperbolic functions
    - performance testing
  **/
 
