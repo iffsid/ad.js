@@ -2,7 +2,6 @@
 
 /**
    Todo:
-   - CHKS max and min
    - performance testing
  **/
 
@@ -167,10 +166,22 @@ var d_lt = overloader_2cmp(primops.lt);
 var d_geq = overloader_2cmp(primops.geq);
 var d_leq = overloader_2cmp(primops.leq);
 
+// Chen-Harker-Kanzow-Smale smoothing
+var _tolSq_ = 1e-10
+var p_extrF = function(a, b, t2) {
+  return d_add(d_sqrt(d_add(d_pow(d_sub(a, b), 2), t2)), d_add(a, b));
+};
+var d_max = function(a, b) {return d_mul(p_extrF(a, b, _tolSq_), 0.5);};
+var d_min = function(a, b) {return d_mul(p_extrF(d_sub(0.0, a), d_sub(0.0, b), _tolSq_), -0.5);};
+
 var d_sqrt = lift_real_to_real(Math.sqrt, function(x){return d_div(1, d_mul(2.0, d_sqrt(x)))})
 var d_exp = lift_real_to_real(Math.exp, function(x){return d_exp(x)});
 var d_log = lift_real_to_real(Math.log, function(x){return d_div(1,x)});
+// Note: derivatives of floor and ceil are undefined at integral values
 var d_floor = lift_real_to_real(Math.floor, primops.zeroF);
+var d_ceil = lift_real_to_real(Math.ceil, primops.zeroF);
+// Note: better representation for abs?
+var d_abs = function(x) {return d_gt(x, 0.0) ? x : d_sub(0.0, x)}
 var d_pow = lift_realreal_to_real(Math.pow,
                                   function(x1, x2){return d_mul(x2, d_pow(x1, d_sub(x2, 1)));},
                                   function(x1, x2){return d_mul(d_log(x1), d_pow(x1, x2));});
@@ -187,6 +198,8 @@ var d_atan = function(x1, x2) {
 var d_Math = {};
 Object.getOwnPropertyNames(Math).forEach(function(n) {d_Math[n] = Math[n]});
 d_Math.floor = d_floor;
+d_Math.ceil = d_ceil;
+d_Math.abs = d_abs;
 d_Math.sqrt = d_sqrt;
 d_Math.exp = d_exp;
 d_Math.log = d_log;
@@ -195,6 +208,8 @@ d_Math.sin = d_sin;
 d_Math.cos = d_cos;
 d_Math.atan = d_atan;
 d_Math.atan2 = d_atan;
+d_Math.max = d_max;
+d_Math.min = d_min;
 
 /** derivatives and gradients **/
 
