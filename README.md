@@ -2,7 +2,11 @@
 
 A translation of the ad library from Jeff Siskind's Qobischeme.
 
-The package provides
+Some links that explain what AD is:
+- [Wikipedia]
+- [Introduction to Automatic Differentiation]
+
+This package provides
 - transformed functions and means to transform others
 - sweetjs macros that can be used to effect replacement of primitive functions
 with above transformed/overloaded ones.
@@ -69,5 +73,16 @@ console.log(dCube_dx(10))
 // will print 300 => d/dx(x^3) = 3x^2 @x=10 = 300
 ```
 
+and even higher-order derivatives as:
+
+``` javascript
+var d2Cube_dx2 = ad.derivativeF(dcube_dx);
+console.log(d2Cube_dx2(10))
+// will print 60 => d2/dx2(x^3) = 6x @x=10 = 60
+```
+
 The bulk of the instructions above are just the means by which sweet gets its
 hands on the code you want to transform and the macros to transform it with.
+
+[Introduction to Automatic Differentiation]: http://alexey.radul.name/ideas/2013/introduction-to-automatic-differentiation/
+[Wikipedia]: https://en.wikipedia.org/wiki/Automatic_differentiation
