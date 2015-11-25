@@ -1,7 +1,5 @@
 ## Automatic Differentiation for JavaScript
 
-A translation of the ad library from Jeff Siskind's Qobischeme.
-
 Some links that explain what AD is:
 - [Wikipedia]
 - [Introduction to Automatic Differentiation]
@@ -10,6 +8,11 @@ This package provides
 - transformed functions and means to transform others
 - sweetjs macros that can be used to effect replacement of primitive functions
 with above transformed/overloaded ones.
+
+Note: This branch is the simplified and full version of ad.js:
+- both `forward` and `reverse` mode,
+- higher order differentiation, and
+- only supporting just scalars.
 
 ### Usage
 
