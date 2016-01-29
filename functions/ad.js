@@ -167,22 +167,26 @@ var d_lt = overloader_2cmp(primops.lt);
 var d_geq = overloader_2cmp(primops.geq);
 var d_leq = overloader_2cmp(primops.leq);
 
-// Chen-Harker-Kanzow-Smale smoothing
-var _tolSq_ = 1e-10
-var p_extrF = function(a, b, t2) {
-  return d_add(d_sqrt(d_add(d_pow(d_sub(a, b), 2), t2)), d_add(a, b));
-};
-var d_max = function(a, b) {return d_mul(p_extrF(a, b, _tolSq_), 0.5);};
-var d_min = function(a, b) {return d_mul(p_extrF(d_sub(0.0, a), d_sub(0.0, b), _tolSq_), -0.5);};
-
 var d_sqrt = lift_real_to_real(Math.sqrt, function(x){return d_div(1, d_mul(2.0, d_sqrt(x)))})
 var d_exp = lift_real_to_real(Math.exp, function(x){return d_exp(x)});
 var d_log = lift_real_to_real(Math.log, function(x){return d_div(1,x)});
 // Note: derivatives of floor and ceil are undefined at integral values
 var d_floor = lift_real_to_real(Math.floor, primops.zeroF);
 var d_ceil = lift_real_to_real(Math.ceil, primops.zeroF);
-// Note: better representation for abs?
+// Note: derivative of abs is undefined at x = 0
 var d_abs = function(x) {return d_gt(x, 0.0) ? x : d_sub(0.0, x)}
+// Note: derivatives of max and min are undefined at x = y
+var d_min = function(x, y) {return d_lt(x, y) ? x : y;};
+var d_max = function(x, y) {return d_lt(x, y) ? y : x;};
+
+// Chen-Harker-Kanzow-Smale smoothing
+var _tolSq_ = 1e-10
+var p_extrF = function(a, b, t2) {
+  return d_add(d_sqrt(d_add(d_pow(d_sub(a, b), 2), t2)), d_add(a, b));
+};
+var d_smax = function(a, b) {return d_mul(p_extrF(a, b, _tolSq_), 0.5);};
+var d_smin = function(a, b) {return d_mul(p_extrF(d_sub(0.0, a), d_sub(0.0, b), _tolSq_), -0.5);};
+
 var d_pow = lift_realreal_to_real(Math.pow,
                                   function(x1, x2){return d_mul(x2, d_pow(x1, d_sub(x2, 1)));},
                                   function(x1, x2){return d_mul(d_log(x1), d_pow(x1, x2));});
@@ -211,6 +215,8 @@ d_Math.atan = d_atan;
 d_Math.atan2 = d_atan;
 d_Math.max = d_max;
 d_Math.min = d_min;
+d_Math.smax = d_smax;
+d_Math.smin = d_smin;
 
 /** derivatives and gradients **/
 
